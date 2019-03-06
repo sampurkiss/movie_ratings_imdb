@@ -39,6 +39,9 @@ movie_database = pd.merge(movie_database, ratings_database, how = 'left', left_o
 #Save database
 movie_database.to_csv(path_or_buf = 'C:/Users/sam purkiss/Documents/Code/IMDB/movie_ratings.csv')
 
+
+movie_database = pd.read_csv('C:/Users/sam purkiss/Documents/Code/IMDB/movie_ratings.csv')
+
 ###############################################
 #Plotly Charts
 ###############################################
@@ -66,7 +69,6 @@ for i in range(1,11):
     traces.append(trace0)
 
 
-?pd.read_excel
 
 dissecting_line = go.Scatter(x =[0,2],
                             y = [0,2],
