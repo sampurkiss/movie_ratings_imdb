@@ -12,7 +12,6 @@ import numpy as np
 import plotly.plotly as py
 import plotly.graph_objs as go
 from scipy import stats
-
 import os
 #os.chdir("C:/Users/sam purkiss/Documents/Code/IMDB")
 from get_rating_data import get_rating_data, generate_imdb_master_list
@@ -36,11 +35,19 @@ movie_database['ratings_differential'] = movie_database['males']- movie_database
 
 movie_database = pd.merge(movie_database, ratings_database, how = 'left', left_on = 'id', right_on= 'tconst')
 
+test = pd.read_csv('https://raw.githubusercontent.com/sampurkiss/movie_ratings_imdb/master/movie_ratings.csv')
+
 #Save database
 movie_database.to_csv(path_or_buf = 'C:/Users/sam purkiss/Documents/Code/IMDB/movie_ratings.csv')
 
 
 movie_database = pd.read_csv('C:/Users/sam purkiss/Documents/Code/IMDB/movie_ratings.csv')
+movie_graph_data = movie_database 
+
+movie_graph_data['male_ranking']= movie_graph_data['males'].rank()
+movie_graph_data['female_ranking']= movie_graph_data['females'].rank()
+movie_graph_data['ranking_differential'] = movie_graph_data['male_ranking']-movie_graph_data['female_ranking']
+
 
 ###############################################
 #Plotly Charts
@@ -184,8 +191,6 @@ py.iplot(fig, filename='proportion-of-female-raters')
 ###########################################################
 #Rating differentials between women and men
 ###########################################################
-
-
 test = movie_graph_data[['no_of_female_ratings','gender_ratings','ratings_differential']]
 test['proportion'] = (test['no_of_female_ratings']/test['gender_ratings']/5).round(2)*5
 test = test.groupby(['proportion'])[['proportion','ratings_differential']].agg(['mean','count'])
