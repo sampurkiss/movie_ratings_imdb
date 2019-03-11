@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import urllib
 import re
 
-def generate_imdb_master_list(min_no_of_votes = 250000, film_type = None, release_year = 1940):
+def generate_imdb_master_list(min_no_of_votes = 250000, film_type = None):
     """
     Generates combined data frame of name and rating data from IMDB.
     Paramaters:
@@ -36,7 +36,7 @@ def generate_imdb_master_list(min_no_of_votes = 250000, film_type = None, releas
     #Refine list of movies
     if film_type != None:
             movie_master_list = master_list[master_list['titleType'] == film_type]
-    movie_master_list = movie_master_list[movie_master_list['numVotes']>max_no_of_votes]
+    movie_master_list = movie_master_list[movie_master_list['numVotes']>min_no_of_votes]
 
     return movie_master_list
 
