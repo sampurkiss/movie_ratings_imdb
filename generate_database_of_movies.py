@@ -34,6 +34,11 @@ for i in movie_master_list['tconst'].iloc[0:len(movie_master_list)-1]:
 movie_database['gender_ratings'] = movie_database['no_of_male_ratings']+movie_database['no_of_female_ratings']
 movie_database['ratings_differential'] = movie_database['males'] - movie_database['females']
 
-movie_database = pd.merge(movie_database, movie_master_list, how = 'left', left_on = 'id', right_on= 'tconst')
-
+movie_database = (pd.merge(movie_database, movie_master_list, 
+                           how = 'left', 
+                           left_on = 'id', 
+                           right_on= 'tconst'))
+movie_database = movie_database.loc[movie_database['year']!='\\N'] #For movies where there's no year
+movie_database.loc['year'] = movie_database['year'].astype(int)
 movie_database.to_csv('movie_database.csv', index=False)
+
