@@ -139,14 +139,18 @@ def get_rating_data(identifier, imdb_master_list, no_of_ratings_threshold = 0):
         box_office = []
         location = []
         for i in range(0, len(all_text)-1):
+            #Get box office data
             if re.findall('Gross USA|Cumulative Worldwide',
                           all_text[i]) !=[]:
                 location0 = re.findall('\D+(?<=:)', 
                                        all_text[i])
                 location.append(location0[0])
-                value = re.findall('(?<=[$])\S+', 
-                                   all_text[i])
-                value = int(value[0].replace(',',''))
+                try:
+                    value = re.findall('(?<=[$])\S+', 
+                                       all_text[i])
+                    value = int(value[0].replace(',',''))
+                except IndexError: #For case when a different currency is used
+                    value = None
                 box_office.append(value)
         try:        
             movie_row['gross_usa'] = [box_office[0]]
@@ -242,9 +246,13 @@ def get_rating_data(identifier, imdb_master_list, no_of_ratings_threshold = 0):
                 ratings_male_dist.append(int(line.text.replace(',','')))
         #Get column names
         rating_range = range(10,0,-1)
+
         for i in rating_range:
-            movie_row['male_rating_'+str(i)] = [ratings_male_dist[10-i]]
-        
+            try:
+                movie_row['male_rating_'+str(i)] = [ratings_male_dist[10-i]]
+            except IndexError:
+                #for cases where there are no gender ratings
+                movie_row['male_rating_'+str(i)] = [None]
         #Get FEMALE rating distribution
         ratings_female = urllib.request.urlopen(ratings_page_female_url)
         ratings_female_html = BeautifulSoup(ratings_female, 'html.parser')
@@ -258,7 +266,9 @@ def get_rating_data(identifier, imdb_master_list, no_of_ratings_threshold = 0):
         #Get column names
         rating_range = range(10,0,-1)
         for i in rating_range:
-            movie_row['female_rating_'+str(i)] = [ratings_female_dist[10-i]]
-        
+            try:
+                movie_row['female_rating_'+str(i)] = [ratings_female_dist[10-i]]
+            except IndexError:
+                 movie_row['female_rating_'+str(i)] = [None]
             
     return movie_row
