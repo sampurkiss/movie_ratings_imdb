@@ -15,7 +15,7 @@ from get_rating_data import get_rating_data, generate_imdb_master_list
 
 
 #Get imdb titles database 
-movie_master_list =generate_imdb_master_list(min_no_of_votes = 2500, film_type = 'movie')
+movie_master_list =generate_imdb_master_list(min_no_of_votes = 10000, film_type = 'movie')
 #Generate database to hold imdb data
 movie_database = pd.DataFrame()
 counter = 1
@@ -35,3 +35,5 @@ movie_database['gender_ratings'] = movie_database['no_of_male_ratings']+movie_da
 movie_database['ratings_differential'] = movie_database['males'] - movie_database['females']
 
 movie_database = pd.merge(movie_database, movie_master_list, how = 'left', left_on = 'id', right_on= 'tconst')
+
+movie_database.to_csv('movie_database.csv', index=False)
