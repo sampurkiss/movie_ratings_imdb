@@ -20,7 +20,7 @@ class get_tv_ratings(object):
     def __init__(self, show_name=None, unique_code=None, titles_data_frame = []):
         """requires inputting the IMDB code for a show or the name of the show.
             You must enter either a show name or unique code. If a unique code is
-            entered, the inputted show name will be ignored.
+            entered, the inputted show name will be ignored. 
             The titles data set can be downloaded from IMDB here: 
                 https://datasets.imdbws.com/title.basics.tsv.gz            
             """        
@@ -85,11 +85,11 @@ class get_tv_ratings(object):
             self.unique_code = self.get_unique_code()
         no_of_seasons = self.titles_data_frame[self.titles_data_frame['tconst']==self.unique_code]['seasonNumber'].iloc[0]
         
-        self.url = 'https://www.imdb.com/title/%s/episodes?season=%s' % (self.unique_code, "%s")
+        url = 'https://www.imdb.com/title/%s/episodes?season=%s' % (self.unique_code, "%s")
 
         for season in range(1, no_of_seasons+1):
             temp_table = pd.DataFrame()                
-            url_current = self.url %(season)             
+            url_current = url %(season)             
             
             try:
                 episode_page = urllib.request.urlopen(url_current)
@@ -148,6 +148,7 @@ class get_tv_ratings(object):
             temp_table['season'] = season
                 
             table = table.append(temp_table)
+        table['tConst'] = self.unique_code
         
         #Make additional data table showing average ratings by seasons
         seasons = []
@@ -157,10 +158,12 @@ class get_tv_ratings(object):
         try:
             self.averages['average_rating'] = round(table.groupby(['season'])['ratings'].mean(),2)
             self.averages['season']  = seasons
+            self.averages['tConst'] = self.unique_code
         except pd.core.base.DataError:
             #Used in rare instance where there is NO rating data for show
             self.averages['average_rating'] = np.nan
             self.averages['season']  = seasons
+            self.averages['tConst'] = self.unique_code
         return table, self.averages
     
     def plot_ratings(self):

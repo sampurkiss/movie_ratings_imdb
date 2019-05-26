@@ -5,40 +5,31 @@ Created on Wed Jan  2 18:33:20 2019
 @author: Sam Purkiss
 """
 
+#Updates
+#This version was changed so that it no longer relies on 
+#webscraping each time the tv show is changed.
+#Instead it relies on a database of show ratings
+
 import pandas as pd
 import os
-import plotly
-import plotly.plotly as py
 import plotly.graph_objs as go
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
 os.chdir("C:/Users/sam purkiss/Documents/Code/IMDB")
-from get_tv_show_ratings import get_tv_ratings
 
-#############################################
-#Set up list of tv series
-#titles = pd.read_csv('https://datasets.imdbws.com/title.basics.tsv.gz', sep='\t')
-#episodes = pd.read_csv('https://datasets.imdbws.com/title.episode.tsv.gz', sep='\t')
-#ratings = pd.read_csv('https://datasets.imdbws.com/title.ratings.tsv.gz', sep = '\t')
-##Ensure there's actually 1 or more seasons. Avoids cases where 
-##only a pilot was released
-#episodes = episodes[episodes['seasonNumber'] !='\\N'].groupby(['parentTconst'])['seasonNumber'].max().reset_index()
-#titles = titles[['tconst','titleType','primaryTitle','originalTitle','startYear','endYear']]
-##Narrow database down to only tvSeries
-#titles = titles[titles['titleType']=='tvSeries']
-#titles = pd.merge(titles, episodes, how='inner',left_on = 'tconst', right_on = 'parentTconst')
-#titles = pd.merge(titles, ratings, how = 'left', on = 'tconst')
-#Filter out any shows with no ratings from people
-#titles = titles[titles['numVotes']>0]
-#titles.to_csv(path_or_buf='tv_show_database.csv')
-##############################################
+average_season_ratings = pd.read_csv('average_rating_by_season.csv')
+average_season_ratings = average_season_ratings.sort_values(by = ['tvshow_code','seasonNumber'], ascending = True)
 
-titles = pd.read_csv('tv_show_database.csv')
-show = get_tv_ratings(show_name= "Seinfeld", titles_data_frame = titles)
-data_table, averages = show.get_rating_data()
-list_text = titles[['primaryTitle','startYear','tconst']].sort_values(by='primaryTitle')
+titles = pd.read_csv('episode_rating_database.csv')
+titles['show_premier_year'] = titles['show_premier_year'].astype(str)
+
+list_text = (titles[['show_name','show_premier_year','tvshow_code']]
+                .groupby(by=['show_name','tvshow_code'])
+                .min()
+                .reset_index()
+            )
 #show.plot_ratings()
 
 
@@ -51,11 +42,11 @@ app.layout = html.Div([
     html.Div([html.Label('Dropdown menu'),
                 dcc.Dropdown(id='show-identifier',
                     options = [
-                        {'label': list_text['primaryTitle'].iloc[i].title()+', '+list_text['startYear'].iloc[i],
-                         'value': list_text['tconst'].iloc[i]} for i in range(0,len(titles)-1)],
+                        {'label': list_text['show_name'].iloc[i].title()+', '+list_text['show_premier_year'].iloc[i],
+                         'value': list_text['tvshow_code'].iloc[i]} for i in range(0,len(list_text))],
                             value= 'tt1856010')]),
     dcc.Graph(
-    id='tv-show-ratings')    
+    id= 'tv-show-ratings')    
     ])
 
 ######################################
@@ -67,19 +58,20 @@ app.layout = html.Div([
         )
 
 def update_graph(show_identifier_value):
-    tv_show = get_tv_ratings(unique_code = show_identifier_value, titles_data_frame = titles)
-    data_table, averages = tv_show.get_rating_data()
-    show_name = list_text[list_text['tconst']==show_identifier_value]['primaryTitle'].iloc[0]
+    data_table = titles.loc[titles['tvshow_code']==show_identifier_value]
+    averages = average_season_ratings.loc[average_season_ratings['tvshow_code']==show_identifier_value]
+
+    show_name = list_text[list_text['tvshow_code']==show_identifier_value]['show_name'].iloc[0]
     hover_text = []
     for i in range(0,len(data_table)):
         hover_text.append(
-                ('{episode_number}<br>'+
-                '{name}').format(episode_number = data_table['episode_number'].iloc[i],
-                                 name = data_table['episode_name'].iloc[i]))            
-    
+                ('Episode {episode_number}, <br>'+
+                 '{name}').format(episode_number = data_table['episodeNumber'].iloc[i],
+                             name = data_table['episode_name'].iloc[i]))            
+
     return {'data': [go.Scatter(
-                    x=data_table['season'],
-                    y=data_table['ratings'],
+                    x=data_table['seasonNumber'],
+                    y=data_table['averageRating'],
                     text=hover_text,
                     mode='markers',
                     opacity=0.7,
@@ -88,10 +80,10 @@ def update_graph(show_identifier_value):
                         'line': {'width': 0.5, 
                                  'color': 'white'}
                     },
-                    name='Episode'), 
+                    name='episode_name'), 
                 go.Scatter(
-                    x=averages['season'],
-                    y=averages['average_rating'],
+                    x=averages['seasonNumber'],
+                    y=averages['averageRating'],
                     text='Average',
                     mode='lines',
                     opacity=0.7,
