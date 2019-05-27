@@ -11,18 +11,15 @@ Created on Wed Jan  2 18:33:20 2019
 #Instead it relies on a database of show ratings
 
 import pandas as pd
-import os
 import plotly.graph_objs as go
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
-os.chdir("C:/Users/sam purkiss/Documents/Code/IMDB")
-
-average_season_ratings = pd.read_csv('average_rating_by_season.csv')
+average_season_ratings = pd.read_csv('https://raw.githubusercontent.com/sampurkiss/movie_ratings_imdb/master/average_rating_by_season.csv')
 average_season_ratings = average_season_ratings.sort_values(by = ['tvshow_code','seasonNumber'], ascending = True)
 
-titles = pd.read_csv('episode_rating_database.csv')
+titles = pd.read_csv('https://raw.githubusercontent.com/sampurkiss/movie_ratings_imdb/master/episode_rating_database.csv')
 titles['show_premier_year'] = titles['show_premier_year'].astype(str)
 
 list_text = (titles[['show_name','show_premier_year','tvshow_code']]
@@ -35,7 +32,7 @@ list_text = (titles[['show_name','show_premier_year','tvshow_code']]
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
+server = app.server
 
 
 app.layout = html.Div([
@@ -80,7 +77,7 @@ def update_graph(show_identifier_value):
                         'line': {'width': 0.5, 
                                  'color': 'white'}
                     },
-                    name='episode_name'), 
+                    name='Episode'), 
                 go.Scatter(
                     x=averages['seasonNumber'],
                     y=averages['averageRating'],
@@ -99,6 +96,10 @@ def update_graph(show_identifier_value):
                        'tickformat':',d'},
                 yaxis={'title': 'Rating', 'range':[0,10]},
                 showlegend=True,
+                legend=dict(bgcolor='rgba(0,0,0,0)',
+                            x=0.05,
+                            y=0.15
+                            ),
                 hovermode='closest',
             )
         }
